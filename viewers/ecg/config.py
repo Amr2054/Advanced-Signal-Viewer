@@ -5,7 +5,7 @@ import zipfile
 import pandas as pd
 
 # Data paths
-DATA_PATH = "data&model/data_2.npz"
+DATA_PATH = "viewers/ecg/data&model/data_specific_records.npz"
 MODEL_PATH = "viewers/ecg/data&model/model02.keras"
 zip_path = "viewers/ecg/data&model/data_2.zip"
 
@@ -67,31 +67,31 @@ MAJOR_GRID_INTERVAL = 0.2  # 200ms
 MINOR_GRID_INTERVAL = 0.04  # 40ms
 MAX_RECURRENCE_SAMPLES = 500
 
-# ICU Monitor colors
-ICU_BACKGROUND_COLOR = '#0a0a0a'  # Almost black
-ICU_GRID_COLOR = '#1a3a1a'  # Dark green
-ICU_SIGNAL_COLORS = [
-    '#00ff00',  # Bright green (Lead 1)
-    '#00cc00',  # Green (Lead 2)
-    '#00ff66',  # Light green (Lead 3)
-    '#33ff33',  # Lime green (Lead 4)
-    '#66ff00',  # Yellow-green (Lead 5)
-    '#00ffcc',  # Cyan-green (Lead 6)
-    '#00ff99',  # Teal-green (Lead 7)
-    '#99ff00',  # Chartreuse (Lead 8)
-    '#00ffff',  # Cyan (Lead 9)
-    '#ccff00',  # Yellow (Lead 10)
-    '#00ff33',  # Spring green (Lead 11)
-    '#00cc66',  # Sea green (Lead 12)
-]
-ICU_SWEEP_LINE_COLOR = '#ffff00'  # Yellow sweep line
+# # ICU Monitor colors
+# ICU_BACKGROUND_COLOR = '#0a0a0a'  # Almost black
+# ICU_GRID_COLOR = '#1a3a1a'  # Dark green
+# ICU_SIGNAL_COLORS = [
+#     '#00ff00',  # Bright green (Lead 1)
+#     '#00cc00',  # Green (Lead 2)
+#     '#00ff66',  # Light green (Lead 3)
+#     '#33ff33',  # Lime green (Lead 4)
+#     '#66ff00',  # Yellow-green (Lead 5)
+#     '#00ffcc',  # Cyan-green (Lead 6)
+#     '#00ff99',  # Teal-green (Lead 7)
+#     '#99ff00',  # Chartreuse (Lead 8)
+#     '#00ffff',  # Cyan (Lead 9)
+#     '#ccff00',  # Yellow (Lead 10)
+#     '#00ff33',  # Spring green (Lead 11)
+#     '#00cc66',  # Sea green (Lead 12)
+# ]
+# ICU_SWEEP_LINE_COLOR = '#ffff00'  # Yellow sweep line
 
 # Default values
 DEFAULT_LEAD_X = 0
 DEFAULT_LEAD_Y = 1
 DEFAULT_RECURRENCE_THRESHOLD = 0.1
 DEFAULT_DOWNSAMPLE_FACTOR = 2
-DEFAULT_SELECTED_CHANNELS = [0, 1, 2, 6, 7, 8]
+DEFAULT_SELECTED_CHANNELS = [0, 1]
 DEFAULT_XOR_CHANNEL_1 = 0
 DEFAULT_XOR_CHANNEL_2 = 1
 DEFAULT_PHASE_SPACE_CHANNEL_1 = 0

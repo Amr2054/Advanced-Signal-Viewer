@@ -114,8 +114,20 @@ def register_ui_callbacks(app):
     def update_polar_window_display(window):
         return f"{window:.1f}s"
 
+    # @app.callback(
+    #     [Output("ecg-polar-playing", "data"), Output("ecg-polar-play-pause", "children"), Output("ecg-polar-play-pause", "color")],
+    #     Input("ecg-polar-play-pause", "n_clicks"),
+    #     State("ecg-polar-playing", "data"),
+    #     prevent_initial_call=True
+    # )
+    # def toggle_polar_playback(n_clicks, is_playing):
+    #     new_state = not is_playing
+    #     return (True, "⏸ Pause", "warning") if new_state else (False, "▶ Play", "success")
+
     @app.callback(
-        [Output("ecg-polar-playing", "data"), Output("ecg-polar-play-pause", "children"), Output("ecg-polar-play-pause", "color")],
+        [Output("ecg-polar-playing", "data"),
+         Output("ecg-polar-play-pause", "children"),
+         Output("ecg-polar-play-pause", "color")],
         Input("ecg-polar-play-pause", "n_clicks"),
         State("ecg-polar-playing", "data"),
         prevent_initial_call=True
@@ -124,9 +136,18 @@ def register_ui_callbacks(app):
         new_state = not is_playing
         return (True, "⏸ Pause", "warning") if new_state else (False, "▶ Play", "success")
 
-    @app.callback(Output("ecg-polar-cumulative-data", "data"), Input("ecg-polar-reset", "n_clicks"), prevent_initial_call=True)
+    # @app.callback(Output("ecg-polar-cumulative-data", "data"), Input("ecg-polar-reset", "n_clicks"), prevent_initial_call=True)
+    # def reset_polar_cumulative(n_clicks):
+    #     return []
+
+    @app.callback(
+        [Output("ecg-polar-cumulative-data", "data", allow_duplicate=True),
+         Output("ecg-polar-position", "data")],
+        Input("ecg-polar-reset", "n_clicks"),
+        prevent_initial_call=True
+    )
     def reset_polar_cumulative(n_clicks):
-        return []
+        return [], 0  # Reset
 
     # === Phase Space Controls ===
     @app.callback(Output("ecg-phase-resolution-display", "children"), Input("ecg-phase-space-resolution", "value"))

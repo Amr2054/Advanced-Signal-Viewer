@@ -61,6 +61,28 @@ def register_graph_callbacks(app, data_loader, predictor):
             return 0 if new_position >= max_position else new_position
         return dash.no_update
 
+    @app.callback(
+        Output("ecg-polar-position", "data", allow_duplicate=True),
+        [Input("ecg-interval", "n_intervals"), Input("ecg-mode-select", "value")],
+        [State("ecg-polar-position", "data"), State("ecg-polar-playing", "data"),
+         State("ecg-signal-length", "data"), State("ecg-polar-window", "value")],
+        prevent_initial_call=True
+    )
+    def update_polar_position(n_intervals, mode, current_position, is_playing, signal_length, window):
+        """Auto-advance polar position when playing"""
+        if mode == 'polar_new' and is_playing and signal_length > 0:
+            # Advance by 0.1 seconds per interval
+            new_position = current_position + 0.1
+            max_position = signal_length - (window or 5.0)
+
+            # Stop at end (don't loop automatically)
+            if new_position >= max_position:
+                return max_position
+            return new_position
+        return dash.no_update
+
+
+
     # Main graph callback
     @app.callback(
         [Output("ecg-graph", "figure"),
@@ -83,6 +105,7 @@ def register_graph_callbacks(app, data_loader, predictor):
          Input("ecg-polar-window", "value"),
          Input("ecg-polar-mode", "value"),
          Input("ecg-polar-playing", "data"),
+         Input("ecg-polar-position", "data"),
          Input("ecg-phase-space-channel-1", "value"),
          Input("ecg-phase-space-channel-2", "value"),
          Input("ecg-phase-space-resolution", "value"),
@@ -93,11 +116,11 @@ def register_graph_callbacks(app, data_loader, predictor):
         prevent_initial_call='initial_duplicate'
     )
     def update_graph(n_intervals, selected_channels, mode, diagnose_clicks, record_index,
-                    continuous_position, continuous_zoom, continuous_speed,
-                    xor_channel, xor_period, xor_duration, xor_threshold,
-                    polar_channel, polar_window, polar_mode, polar_playing,
-                    phase_ch1, phase_ch2, phase_resolution, colormap,
-                    current_diagnosis, current_bpm, polar_cumulative):
+                     continuous_position, continuous_zoom, continuous_speed,
+                     xor_channel, xor_period, xor_duration, xor_threshold,
+                     polar_channel, polar_window, polar_mode, polar_playing,
+                     polar_position,phase_ch1, phase_ch2, phase_resolution, colormap,
+                     current_diagnosis, current_bpm, polar_cumulative):
         """Main graph update"""
 
         ctx = dash.callback_context
@@ -119,7 +142,7 @@ def register_graph_callbacks(app, data_loader, predictor):
         phase_resolution = phase_resolution if phase_resolution is not None else 0.1
         colormap = colormap if colormap is not None else DEFAULT_COLORMAP
         polar_cumulative = polar_cumulative if polar_cumulative is not None else []
-
+        polar_position = polar_position if polar_position is not None else 0
         try:
             metadata, signal, signal_scaled, target = data_loader.get_record(record_index)
         except Exception as e:
@@ -174,20 +197,47 @@ def register_graph_callbacks(app, data_loader, predictor):
                                             xor_threshold, record_index)
                 return fig, current_diagnosis or "", bpm_text, polar_cumulative
 
+            # elif mode == 'polar_new':
+            #     if polar_playing:
+            #         window_size = int(polar_window * fs)
+            #         start_idx = (n_intervals * 10) % max(1, len(signal) - window_size)
+            #         end_idx = start_idx + window_size
+            #     else:
+            #         window_size = int(polar_window * fs)
+            #         start_idx, end_idx = 0, min(window_size, len(signal))
+            #
+            #     t = np.arange(start_idx, end_idx) / fs
+            #     signal_window = signal[start_idx:end_idx, :]
+            #     is_cumulative = (polar_mode == 'cumulative')
+            #     fig, new_cumulative = create_polar_new_plot(signal_window, t, polar_channel, record_index,
+            #                                                start_idx, end_idx, fs, is_cumulative, polar_cumulative)
+            #     return fig, current_diagnosis or "", bpm_text, new_cumulative
             elif mode == 'polar_new':
+                window_size = int(polar_window * fs)
+
                 if polar_playing:
-                    window_size = int(polar_window * fs)
-                    start_idx = (n_intervals * 10) % max(1, len(signal) - window_size)
-                    end_idx = start_idx + window_size
+                    # Use position-based playback
+                    start_idx = int(polar_position * fs)
+                    end_idx = min(start_idx + window_size, len(signal))
+
+                    # Ensure valid window
+                    if end_idx > len(signal):
+                        start_idx = max(0, len(signal) - window_size)
+                        end_idx = len(signal)
                 else:
-                    window_size = int(polar_window * fs)
-                    start_idx, end_idx = 0, min(window_size, len(signal))
+                    # Paused: keep current position
+                    start_idx = int(polar_position * fs)
+                    end_idx = min(start_idx + window_size, len(signal))
+
+                    if end_idx > len(signal):
+                        start_idx = max(0, len(signal) - window_size)
+                        end_idx = len(signal)
 
                 t = np.arange(start_idx, end_idx) / fs
                 signal_window = signal[start_idx:end_idx, :]
                 is_cumulative = (polar_mode == 'cumulative')
                 fig, new_cumulative = create_polar_new_plot(signal_window, t, polar_channel, record_index,
-                                                           start_idx, end_idx, fs, is_cumulative, polar_cumulative)
+                                                            start_idx, end_idx, fs, is_cumulative, polar_cumulative)
                 return fig, current_diagnosis or "", bpm_text, new_cumulative
 
             elif mode == 'phase_space':

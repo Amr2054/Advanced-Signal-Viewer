@@ -3,9 +3,9 @@ Utilities package initialization for ECG Viewer - COMPLETE
 """
 from .signal_processing import (
     get_heartbeat_info,
-    compute_recurrence_matrix,
-    downsample_signal,
-    standardize_signal,
+    # compute_recurrence_matrix,
+    # downsample_signal,
+    # standardize_signal,
     compute_phase_space_occurrences
 )
 from .visualization import (
@@ -19,9 +19,9 @@ from .visualization import (
 
 __all__ = [
     'get_heartbeat_info',
-    'compute_recurrence_matrix',
-    'downsample_signal',
-    'standardize_signal',
+    # 'compute_recurrence_matrix',
+    # 'downsample_signal',
+    # 'standardize_signal',
     'compute_phase_space_occurrences',
     'create_static_dynamic_plot',
    # 'create_icu_monitor_plot',

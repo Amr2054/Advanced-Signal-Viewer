@@ -4,24 +4,28 @@ Visualization utilities for creating ECG plots
 import numpy as np
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
-from viewers.ecg.config import (
-    SAMPLING_FREQUENCY,
-    MAX_RECURRENCE_SAMPLES,
-    ICU_WINDOW_DURATION,
-    ICU_BACKGROUND_COLOR,
-    ICU_GRID_COLOR,
-    ICU_SIGNAL_COLORS,
-    ICU_SWEEP_LINE_COLOR,
-    #XOR_THRESHOLD,
-    PHASE_SPACE_GRID_RESOLUTION,
-    PHASE_SPACE_MIN_COUNT_DISPLAY
-)
-from viewers.ecg.utils.signal_processing import (
-    compute_recurrence_matrix,
-    downsample_signal,
-    standardize_signal,
-    compute_phase_space_occurrences
-)
+from viewers.ecg.utils.signal_processing import compute_phase_space_occurrences
+from viewers.ecg.config import PHASE_SPACE_MIN_COUNT_DISPLAY
+
+
+# from viewers.ecg.config import (
+#     SAMPLING_FREQUENCY,
+#     MAX_RECURRENCE_SAMPLES,
+#     ICU_WINDOW_DURATION,
+#     ICU_BACKGROUND_COLOR,
+#     ICU_GRID_COLOR,
+#     ICU_SIGNAL_COLORS,
+#     ICU_SWEEP_LINE_COLOR,
+#     #XOR_THRESHOLD,
+#     PHASE_SPACE_GRID_RESOLUTION,
+#     PHASE_SPACE_MIN_COUNT_DISPLAY
+# )
+# from viewers.ecg.utils.signal_processing import (
+#     compute_recurrence_matrix,
+#     downsample_signal,
+#     standardize_signal,
+#     compute_phase_space_occurrences
+# )
 
 
 # def create_phase_space_plot(signal_window, channel_1, channel_2, record_index,
@@ -339,7 +343,7 @@ def create_static_dynamic_plot(signal_window, t, selected_channels, record_index
     if num_channels == 0:
         return go.Figure()
 
-    fig = make_subplots(rows=num_channels, cols=1, shared_xaxes=True, vertical_spacing=0)
+    fig = make_subplots(rows=num_channels, cols=1, shared_xaxes=True, vertical_spacing=0.02)
 
     for j, ch in enumerate(selected_channels):
         fig.add_trace(
@@ -377,8 +381,7 @@ def create_continuous_plot(signal_window, t, selected_channels, record_index,
     Returns:
         go.Figure: Plotly figure object
     """
-    from plotly.subplots import make_subplots
-    import plotly.graph_objs as go
+
 
     num_channels = len(selected_channels)
     if num_channels == 0:
@@ -489,10 +492,17 @@ def create_continuous_plot(signal_window, t, selected_channels, record_index,
 # ToDo
 
 
+"""
+Replace the create_xor_chunks_plot function in viewers/ecg/utils/visualization.py
+CORRECT XOR LOGIC: Compare consecutive chunks, show only differences
+"""
+
+
 def create_xor_chunks_plot(signal, fs, channel, chunk_period, duration, threshold, record_index):
     """
-    Create XOR Time Chunks plot - divide signal into chunks and overlay with XOR logic
-    CORRECTED VERSION: Simpler, clearer XOR implementation
+    Create XOR Time Chunks plot - XOR between consecutive chunks
+    If chunks match (within threshold), they cancel out (XOR = 0, nothing plotted)
+    If chunks differ, show the difference
 
     Args:
         signal (np.ndarray): Full ECG signal
@@ -500,27 +510,24 @@ def create_xor_chunks_plot(signal, fs, channel, chunk_period, duration, threshol
         channel (int): Channel index to display
         chunk_period (float): Duration of each chunk in seconds
         duration (float): Total duration to analyze in seconds
-        threshold (float): Threshold for XOR erasure (mV)
+        threshold (float): Threshold for considering points as matching (mV)
         record_index (int): Record index
 
     Returns:
-        go.Figure: Plotly figure with overlaid chunks
+        go.Figure: Plotly figure with XOR result
     """
     import numpy as np
     import plotly.graph_objs as go
 
-    # Calculate number of samples
+    # Calculate samples
     chunk_samples = int(chunk_period * fs)
     duration_samples = int(duration * fs)
 
-    # Validate
     if chunk_samples == 0 or duration_samples == 0:
         fig = go.Figure()
-        fig.add_annotation(text="Invalid chunk period or duration",
-                           xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
+        fig.add_annotation(text="Invalid parameters", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
         return fig
 
-    # Extract the duration window
     if duration_samples > len(signal):
         duration_samples = len(signal)
 
@@ -529,13 +536,13 @@ def create_xor_chunks_plot(signal, fs, channel, chunk_period, duration, threshol
     # Calculate number of chunks
     num_chunks = duration_samples // chunk_samples
 
-    if num_chunks == 0:
+    if num_chunks < 2:
         fig = go.Figure()
-        fig.add_annotation(text="Chunk period too large for duration",
+        fig.add_annotation(text="Need at least 2 chunks for XOR comparison",
                            xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
         return fig
 
-    # Create time array for one chunk
+    # Time array for one chunk
     t_chunk = np.linspace(0, chunk_period, chunk_samples)
 
     # Extract all chunks
@@ -544,48 +551,61 @@ def create_xor_chunks_plot(signal, fs, channel, chunk_period, duration, threshol
         start_idx = i * chunk_samples
         end_idx = start_idx + chunk_samples
         if end_idx <= len(signal_window):
-            chunk = signal_window[start_idx:end_idx]
-            chunks.append(chunk)
+            chunks.append(signal_window[start_idx:end_idx])
 
-    # Create figure
     fig = go.Figure()
 
-    # Simple XOR implementation:
-    # Plot all chunks with transparency
-    # Where chunks overlap and are similar (within threshold), they visually blend/cancel
+    # XOR Logic: Compare consecutive chunks
+    # For each pair of consecutive chunks, apply XOR
+    for i in range(len(chunks) - 1):
+        chunk1 = chunks[i]
+        chunk2 = chunks[i + 1]
 
-    colors = [
-        'blue', 'red', 'green', 'purple', 'orange',
-        'brown', 'pink', 'gray', 'olive', 'cyan'
-    ]
+        # Calculate difference
+        diff = np.abs(chunk1 - chunk2)
 
-    for i, chunk in enumerate(chunks):
-        color = colors[i % len(colors)]
+        # XOR: Only plot where difference > threshold (i.e., chunks don't match)
+        # Where diff <= threshold, chunks match, XOR = 0 (don't plot)
+        xor_mask = diff > threshold
 
-        fig.add_trace(go.Scatter(
-            x=t_chunk,
-            y=chunk,
-            mode='lines',
-            name=f'Chunk {i + 1}',
-            line=dict(width=2, color=color),
-            opacity=0.6,
-            showlegend=True
-        ))
+        # Get points where XOR = 1 (difference exists)
+        xor_times = t_chunk[xor_mask]
+        xor_values = diff[xor_mask]
 
-    # Update layout
+        if len(xor_times) > 0:
+            fig.add_trace(go.Scatter(
+                x=xor_times,
+                y=xor_values,
+                mode='markers',
+                name=f'XOR: Chunk {i + 1} ⊕ Chunk {i + 2}',
+                marker=dict(size=4, opacity=0.7),
+                showlegend=True
+            ))
+
+    # If all XOR results are empty, show message
+    if len(fig.data) == 0:
+        fig.add_annotation(
+            text="All chunks match within threshold!<br>(XOR result is empty)",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5,
+            showarrow=False,
+            font=dict(size=16, color="green")
+        )
+
     fig.update_layout(
-        title=f"ECG Record {record_index} - XOR Time Chunks Overlay<br>"
+        title=f"ECG Record {record_index} - XOR Between Consecutive Chunks<br>"
               f"Lead {channel + 1} | Chunk Period: {chunk_period:.1f}s | "
-              f"Duration: {duration:.0f}s | {len(chunks)} chunks overlaid",
+              f"{len(chunks)} chunks | Threshold: {threshold:.2f}mV<br>"
+              f"<i>Points shown = chunks differ | Empty = chunks match</i>",
         xaxis_title="Time within Chunk [s]",
-        yaxis_title="Amplitude [mV]",
+        yaxis_title="Absolute Difference [mV]",
         height=600,
-        hovermode='x unified',
+        hovermode='closest',
         showlegend=True
     )
 
     fig.update_xaxes(showgrid=True, gridcolor='lightgray', range=[0, chunk_period])
-    fig.update_yaxes(showgrid=True, gridcolor='lightgray', zeroline=True, zerolinecolor='gray')
+    fig.update_yaxes(showgrid=True, gridcolor='lightgray', zeroline=True)
 
     return fig
 
@@ -693,8 +713,7 @@ def create_phase_space_plot_with_colormap(signal_window, channel_1, channel_2, r
     Returns:
         go.Figure: Plotly figure
     """
-    from viewers.ecg.utils.signal_processing import compute_phase_space_occurrences
-    from viewers.ecg.config import PHASE_SPACE_MIN_COUNT_DISPLAY
+
 
     # Extract signals
     sig_x = signal_window[:, channel_1]

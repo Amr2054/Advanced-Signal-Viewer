@@ -11,13 +11,13 @@ import zipfile
 class ECGDataLoader:
     """Handles loading and accessing ECG data from .npz files"""
 
-    def __init__(self, data_path=zip_path):
+    def __init__(self, data_path=DATA_PATH):
         """Load ECG data from specified path"""
 
-        with zipfile.ZipFile(zip_path, 'r') as archive:
-            self.data = np.load(BytesIO(archive.read('data_2.npz')))
+        # with zipfile.ZipFile(zip_path, 'r') as archive:
+        #     self.data = np.load(BytesIO(archive.read('data_2.npz')))
 
-        # self.data = np.load(data_path)
+        self.data = np.load(data_path)
         self.X = self.data['X_test']  # Patient and sample metadata
         self.Y = self.data['Y_test_non_scaled']  # ECG curves (non-scaled)
         self.Z = self.data['Z_test']  # Targets

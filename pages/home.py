@@ -39,7 +39,7 @@ viewer_cards = [
         "available": True  # Coming soon
     },
     {
-        "title": "More Graphs",
+        "title": "Doppler Viewer",
         "description": "Universal signal viewer for custom physiological signals. Import and analyze any time-series data.",
         "icon": "📊",
         "features": [
@@ -49,9 +49,24 @@ viewer_cards = [
             "Signal filtering",
             "Export capabilities"
         ],
-        "href": "/signal-viewer",
+        "href": "/doppler-viewer",
         "color": "success",
-        "available": False  # Coming soon
+        "available": True  # Coming soon
+    },
+    {
+        "title": "SAR - Drone Viewer",
+        "description": "Universal signal viewer for custom physiological signals. Import and analyze any time-series data.",
+        "icon": "📊",
+        "features": [
+            "Custom signal import",
+            "Multi-channel support",
+            "Time-frequency analysis",
+            "Signal filtering",
+            "Export capabilities"
+        ],
+        "href": "/SAR-Drone",
+        "color": "success",
+        "available": True  # Coming soon
     }
 ]
 
