@@ -313,7 +313,7 @@ def compute_source_frequency(filename, freq_at_max_amp):
     gt_speed = int(gt_speed_str)
     
     if vehicle_name not in VEHICLE_NAME_MAP:
-        return "Vehicle not in dataset", "N/A"
+        return "Vehicle is not present", "N/A"
     
     vehicle_h5_key = VEHICLE_NAME_MAP[vehicle_name]
     
