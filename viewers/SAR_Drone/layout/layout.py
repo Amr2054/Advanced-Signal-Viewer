@@ -7,7 +7,7 @@ def SAR_app_layout():
         # Title
         dbc.Row([
             dbc.Col([
-                html.H1("🌍 Disaster Detection System", className="text-center my-4"),
+                html.H1("Disaster Detection System", className="text-center my-4"),
                 html.Hr()
             ])
         ]),

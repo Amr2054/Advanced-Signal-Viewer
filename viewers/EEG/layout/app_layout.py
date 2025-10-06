@@ -68,7 +68,7 @@ custom_styles = {
 # layout
 def app_layout():
     return html.Div([
-        html.H1("EEG Signal Viewer - Dynamic Analysis", style=custom_styles['header']),
+        html.H1("EEG Signal Viewer", style=custom_styles['header']),
 
         dcc.Upload(
             id='upload-data',

@@ -244,22 +244,35 @@ from viewers.ecg.config import (
     AVAILABLE_COLORMAPS,
     DEFAULT_COLORMAP
 )
-
+ECG_LEAD_NAMES = [
+    'I',      # Lead I (Limb lead)
+    'II',     # Lead II (Limb lead)
+    'III',    # Lead III (Limb lead)
+    'aVR',    # Augmented Vector Right
+    'aVL',    # Augmented Vector Left
+    'aVF',    # Augmented Vector Foot
+    'V1',     # Precordial lead V1
+    'V2',     # Precordial lead V2
+    'V3',     # Precordial lead V3
+    'V4',     # Precordial lead V4
+    'V5',     # Precordial lead V5
+    'V6',     # Precordial lead V6
+]
 
 def create_ecg_layout(num_records, num_leads):
     """Create compact ECG viewer layout with enhanced UI"""
 
     return html.Div([
         # Header
-        html.H2("🫀 ECG Signal Viewer", style={'textAlign': 'center', 'marginBottom': '30px', 'color': '#2c3e50'}),
+        html.H1("ECG Signal Viewer", style={'textAlign': 'center', 'marginBottom': '30px', 'color': '#2c3e50'}),
 
         # Record selection
         html.Div([
-            html.Label("📊 Select ECG Record:", style={'fontWeight': 'bold', 'fontSize': '14px'}),
+            html.Label("Select ECG Record:", style={'fontWeight': 'bold', 'fontSize': '14px'}),
             dcc.Dropdown(
                 id="ecg-record-select",
                 options=[{"label": f"Record {i}", "value": i} for i in range(num_records)],
-                value=0,
+                value=None,
                 clearable=False,
                 style={'width': '100%'}
             ),
@@ -281,7 +294,10 @@ def create_ecg_layout(num_records, num_leads):
                         html.Label([
                             dcc.Checklist(
                                 id='ecg-channel-select',
-                                options=[{'label': f' Lead {i + 1}', 'value': i} for i in range(num_leads)],
+                                # options=[{'label': f' Lead {i + 1}', 'value': i} for i in range(num_leads)],
+                                options=[{'label': f'Lead {ECG_LEAD_NAMES[i]}', 'value': i} for i in
+                                         range(min(num_leads, 12))]
+                                ,
                                 value=DEFAULT_SELECTED_CHANNELS,
                                 labelStyle={
                                     'display': 'inline-block',
@@ -429,7 +445,9 @@ def create_ecg_layout(num_records, num_leads):
                             html.Label("Channel:", style={'fontWeight': '600'}),
                             dcc.Dropdown(
                                 id="ecg-xor-chunks-channel",
-                                options=[{"label": f"Lead {i + 1}", "value": i} for i in range(num_leads)],
+                                # options=[{"label": f"Lead {i + 1}", "value": i} for i in range(num_leads)],
+                                options=[{'label': f'Lead {ECG_LEAD_NAMES[i]}', 'value': i} for i in
+                                         range(min(num_leads, 12))],
                                 value=0
                             ),
                         ], style={'width': '23%', 'display': 'inline-block', 'marginRight': '2%'}),
@@ -466,7 +484,9 @@ def create_ecg_layout(num_records, num_leads):
                             html.Label("Channel:", style={'fontWeight': '600'}),
                             dcc.Dropdown(
                                 id="ecg-polar-channel",
-                                options=[{"label": f"Lead {i + 1}", "value": i} for i in range(num_leads)],
+                                # options=[{"label": f"Lead {i + 1}", "value": i} for i in range(num_leads)],
+                                options=[{'label': f'Lead {ECG_LEAD_NAMES[i]}', 'value': i} for i in
+                                         range(min(num_leads, 12))],
                                 value=0
                             ),
                         ], style={'width': '23%', 'display': 'inline-block', 'marginRight': '2%'}),
@@ -507,7 +527,9 @@ def create_ecg_layout(num_records, num_leads):
                             html.Label("X-axis Lead:", style={'fontWeight': '600'}),
                             dcc.Dropdown(
                                 id="ecg-phase-space-channel-1",
-                                options=[{"label": f"Lead {i + 1}", "value": i} for i in range(num_leads)],
+                                # options=[{"label": f"Lead {i + 1}", "value": i} for i in range(num_leads)],
+                                options=[{'label': f'Lead {ECG_LEAD_NAMES[i]}', 'value': i} for i in
+                                         range(min(num_leads, 12))],
                                 value=DEFAULT_PHASE_SPACE_CHANNEL_1
                             ),
                         ], style={'width': '23%', 'display': 'inline-block', 'marginRight': '2%'}),
@@ -515,7 +537,9 @@ def create_ecg_layout(num_records, num_leads):
                             html.Label("Y-axis Lead:", style={'fontWeight': '600'}),
                             dcc.Dropdown(
                                 id="ecg-phase-space-channel-2",
-                                options=[{"label": f"Lead {i + 1}", "value": i} for i in range(num_leads)],
+                                # options=[{"label": f"Lead {i + 1}", "value": i} for i in range(num_leads)],
+                                options=[{'label': f'Lead {ECG_LEAD_NAMES[i]}', 'value': i} for i in
+                                         range(min(num_leads, 12))],
                                 value=DEFAULT_PHASE_SPACE_CHANNEL_2
                             ),
                         ], style={'width': '23%', 'display': 'inline-block', 'marginRight': '2%'}),

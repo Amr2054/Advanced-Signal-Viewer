@@ -48,7 +48,7 @@ VEHICLE_NAME_MAP = {
 def create_main_layout():
     """Create the main layout with navigation."""
     return dbc.Container([
-        html.H1("DOPPLER EFFECT ANALYZER", style={'textAlign': 'center'}),
+        html.H1("Doppler Effect Analyzer", style={'textAlign': 'center'}),
         html.Hr(),
         
         dbc.Row([

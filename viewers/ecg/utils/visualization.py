@@ -333,6 +333,13 @@ from viewers.ecg.config import PHASE_SPACE_MIN_COUNT_DISPLAY
 #
 #     return fig
 
+ECG_LEAD_NAMES = ['I', 'II', 'III', 'aVR', 'aVL', 'aVF', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6']
+
+def get_lead_name(lead_index):
+    if lead_index < 12:
+        return f'Lead {ECG_LEAD_NAMES[lead_index]}'
+    else:
+        return f'Lead {lead_index + 1}'
 
 def create_static_dynamic_plot(signal_window, t, selected_channels, record_index,
                                 start_idx, end_idx, fs, mode='static'):
@@ -347,7 +354,7 @@ def create_static_dynamic_plot(signal_window, t, selected_channels, record_index
 
     for j, ch in enumerate(selected_channels):
         fig.add_trace(
-            go.Scatter(x=t, y=signal_window[:, ch], mode='lines', name=f'Lead {ch + 1}', line=dict(width=1)),
+            go.Scatter(x=t, y=signal_window[:, ch], mode='lines', name=get_lead_name(ch), line=dict(width=1)),
             row=j + 1, col=1
         )
 
@@ -403,7 +410,7 @@ def create_continuous_plot(signal_window, t, selected_channels, record_index,
                 x=t,
                 y=signal_window[:, ch],
                 mode='lines',
-                name=f'Lead {ch + 1}',
+                name=get_lead_name(ch),
                 line=dict(width=1.5, color=f'rgb({50 + ch * 20}, {100 + ch * 10}, {200 - ch * 10})'),
                 showlegend=False
             ),
