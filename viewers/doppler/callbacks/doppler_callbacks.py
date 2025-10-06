@@ -299,21 +299,21 @@ def compute_observed_freq(source_f, speed_ms, car_x, observer_x, lateral):
     return f_obs, v_radial, r
 
 def compute_source_frequency(filename, freq_at_max_amp):
-    """Compute source frequency from filename and observed frequency."""
+    """Compute source frequency and predicted velocity from filename and observed frequency."""
     if hf is None:
-        return "H5 file not available"
+        return "H5 file not available", "N/A"
     
     basename = secure_filename(filename)
     match = re.match(r"([A-Za-z0-9]+)_(\d+)", basename)
     
     if not match:
-        return "Invalid filename format"
+        return "Invalid filename format", "N/A"
     
     vehicle_name, gt_speed_str = match.groups()
     gt_speed = int(gt_speed_str)
     
     if vehicle_name not in VEHICLE_NAME_MAP:
-        return "Vehicle not in dataset"
+        return "Vehicle not in dataset", "N/A"
     
     vehicle_h5_key = VEHICLE_NAME_MAP[vehicle_name]
     
@@ -321,10 +321,10 @@ def compute_source_frequency(filename, freq_at_max_amp):
         speed_est = np.array(hf[vehicle_h5_key + '_speeds_est_all'], dtype=np.float64)
         speed_gt = np.array(hf[vehicle_h5_key + '_speeds_gt'], dtype=int)
     except:
-        return "Data not found in H5 file"
+        return "Data not found in H5 file", "N/A"
     
     if gt_speed not in speed_gt:
-        return "GT speed not found in H5"
+        return "GT speed not found in H5", "N/A"
     
     # Get predicted speed
     gt_index = np.where(speed_gt == gt_speed)[0][0]
@@ -335,8 +335,8 @@ def compute_source_frequency(filename, freq_at_max_amp):
     source_freq = freq_at_max_amp * (SOUND_SPEED - predicted_speed_ms) / SOUND_SPEED
     
     return (
-        f"Estimated source frequency: {source_freq:.2f} Hz "
-        f"(using predicted speed {predicted_speed_kmh:.2f} km/h)"
+        f"{source_freq:.2f} Hz",
+        f"{predicted_speed_kmh:.2f} km/h"
     )
 
 def get_initial_animation_state():
@@ -344,8 +344,11 @@ def get_initial_animation_state():
     style = {
         'position': 'absolute',
         'left': '10%',
-        'top': '36%',
-        'fontSize': '40px'
+        'top': '50%',
+        'fontSize': '50px',
+        'transform': 'translateY(-50%)',
+        'filter': 'drop-shadow(2px 2px 4px rgba(0,0,0,0.3))',
+        'transition': 'left 0.04s linear'
     }
     return (
         True,
@@ -365,8 +368,11 @@ def handle_start_stop(anim_state, speed_val, speed_unit, speed_ms,
     style = {
         'position': 'absolute',
         'left': '10%',
-        'top': '36%',
-        'fontSize': '40px'
+        'top': '50%',
+        'fontSize': '50px',
+        'transform': 'translateY(-50%)',
+        'filter': 'drop-shadow(2px 2px 4px rgba(0,0,0,0.3))',
+        'transition': 'left 0.04s linear'
     }
     
     if anim_state == 'stopped':
@@ -375,10 +381,7 @@ def handle_start_stop(anim_state, speed_val, speed_unit, speed_ms,
         car_x0 = START_X
         f0, _, _ = compute_observed_freq(source_f, speed_ms, car_x0, OBSERVER_X, lateral)
         
-        info = (
-            f"Started. speed={speed_val} {speed_unit} "
-            f"({speed_ms:.2f} m/s), lateral={lateral} m"
-        )
+        info = ""
         
         return (
             False,
@@ -399,7 +402,7 @@ def handle_start_stop(anim_state, speed_val, speed_unit, speed_ms,
             f"{START_X:.1f} m",
             "0.00 s",
             "--- Hz",
-            "Stopped",
+            "",
             style
         )
 
@@ -420,9 +423,12 @@ def handle_animation_step(start_ts, n_intervals, speed_ms, source_f, lateral):
     if speed_ms > 0 and car_x >= END_X:
         style = {
             'position': 'absolute',
-            'left': '10%',
-            'top': '36%',
-            'fontSize': '40px'
+            'left': '90%',
+            'top': '50%',
+            'fontSize': '50px',
+            'transform': 'translateY(-50%)',
+            'filter': 'drop-shadow(2px 2px 4px rgba(0,0,0,0.3))',
+            'transition': 'left 0.04s linear'
         }
         trip_duration = (END_X - START_X) / max(speed_ms, 1e-9)
         return (
@@ -432,7 +438,7 @@ def handle_animation_step(start_ts, n_intervals, speed_ms, source_f, lateral):
             f"{END_X:.1f} m",
             f"{trip_duration:.2f} s",
             "--- Hz",
-            "Trip finished",
+            "",
             style
         )
     
@@ -448,15 +454,14 @@ def handle_animation_step(start_ts, n_intervals, speed_ms, source_f, lateral):
     style = {
         'position': 'absolute',
         'left': f'{left_pct}%',
-        'top': '36%',
-        'fontSize': '40px'
+        'top': '50%',
+        'fontSize': '50px',
+        'transform': 'translateY(-50%)',
+        'filter': 'drop-shadow(2px 2px 4px rgba(0,0,0,0.3))',
+        'transition': 'left 0.04s linear'
     }
     
-    info = (
-        f"car_x={car_x:.1f} m | t={t:.2f}s | "
-        f"v_radial={v_radial:.3f} m/s | slant_r={r:.1f} m | "
-        f"source={source_f:.1f} Hz"
-    )
+    info = ""
     
     return (
         False,
@@ -478,14 +483,13 @@ def doppler_callbacks(app):
         Input('url', 'pathname'),
     )
     def display_page(pathname):
-
         """Route to appropriate page based on URL."""
         if pathname == "/doppler-viewer/detection":
             return create_detection_layout()
         elif pathname == "/doppler-viewer/generation":
             return create_generation_layout()
         else:
-            return html.Div([html.H3("Welcome! Select an option above.")])
+            return html.Div()
 
 
     @app.callback(
@@ -519,16 +523,9 @@ def doppler_callbacks(app):
             # Convert to base64 for audio player
             audio_base64 = audio_array_to_base64(audio_data)
             
-            # Calculate trip info
-            trip_duration = time_array[-1]
-            min_freq = np.min(freq_profile)
-            max_freq = np.max(freq_profile)
-            
-            # Create audio player with info
+            # Create audio player without trip info
             audio_player = html.Div([
                 html.H4("Generated Doppler Audio (Stereo)", style={'color': 'green'}),
-                html.P(f"Trip Duration: {trip_duration:.2f}s | "
-                    f"Frequency Range: {min_freq:.1f} Hz → {max_freq:.1f} Hz → {min_freq:.1f} Hz"),
                 html.P("🎧 Use headphones for best spatial effect!", style={'fontStyle': 'italic', 'color': '#666'}),
                 html.Audio(
                     src=audio_base64,
@@ -560,7 +557,7 @@ def doppler_callbacks(app):
     def update_detection_output(contents, filename):
         """Process uploaded WAV file and display analysis results."""
         if contents is None:
-            return go.Figure(), "No file uploaded", "", ""
+            return go.Figure(), "", "", ""
         
         try:
             # Extract frequency data from WAV
@@ -588,27 +585,16 @@ def doppler_callbacks(app):
                 height=500
             )
             
-            # Display file information
-            file_info = (
-                f"Sample rate: {sample_rate} Hz, "
-                f"Total samples: {len(audio_data)}"
-            )
-            
-            max_freq_text = (
-                f"Observed frequency at max amplitude: "
-                f"{freq_at_max_amp:.2f} Hz at {time_at_max_amp:.2f}s"
-            )
-            
-            # Compute source frequency using predicted speed
-            source_freq_text = compute_source_frequency(
+            # Compute source frequency and predicted velocity
+            estimated_freq_text, estimated_velocity_text = compute_source_frequency(
                 filename,
                 freq_at_max_amp
             )
             
-            return fig, file_info, max_freq_text, source_freq_text
+            return fig, "", estimated_velocity_text, estimated_freq_text
         
         except Exception as e:
-            return go.Figure(), f"Error reading WAV: {str(e)}", "", ""
+            return go.Figure(), "", f"Error: {str(e)}", ""
 
     @app.callback(
         [
