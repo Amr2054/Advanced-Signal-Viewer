@@ -1,6 +1,4 @@
-"""
-Configuration settings for the ECG Viewer application
-"""
+
 import zipfile
 import pandas as pd
 
@@ -30,7 +28,7 @@ ICU_UPDATE_INTERVAL = 100  # milliseconds (10 fps for smooth scrolling)
 ICU_SCROLL_STEP = 10  # samples to advance per update (0.1 seconds at 100 Hz)
 
 # XOR Time Chunks parameters
-XOR_CHUNKS_DEFAULT_PERIOD = 1.0  # seconds per chunk (default)
+XOR_CHUNKS_DEFAULT_PERIOD = 5.0  # seconds per chunk (default)
 XOR_CHUNKS_MIN_PERIOD = 0.2  # minimum chunk period
 XOR_CHUNKS_MAX_PERIOD = 5.0  # maximum chunk period
 XOR_CHUNKS_DEFAULT_DURATION = 10.0  # total duration to analyze (seconds)
@@ -67,24 +65,6 @@ MAJOR_GRID_INTERVAL = 0.2  # 200ms
 MINOR_GRID_INTERVAL = 0.04  # 40ms
 MAX_RECURRENCE_SAMPLES = 500
 
-# # ICU Monitor colors
-# ICU_BACKGROUND_COLOR = '#0a0a0a'  # Almost black
-# ICU_GRID_COLOR = '#1a3a1a'  # Dark green
-# ICU_SIGNAL_COLORS = [
-#     '#00ff00',  # Bright green (Lead 1)
-#     '#00cc00',  # Green (Lead 2)
-#     '#00ff66',  # Light green (Lead 3)
-#     '#33ff33',  # Lime green (Lead 4)
-#     '#66ff00',  # Yellow-green (Lead 5)
-#     '#00ffcc',  # Cyan-green (Lead 6)
-#     '#00ff99',  # Teal-green (Lead 7)
-#     '#99ff00',  # Chartreuse (Lead 8)
-#     '#00ffff',  # Cyan (Lead 9)
-#     '#ccff00',  # Yellow (Lead 10)
-#     '#00ff33',  # Spring green (Lead 11)
-#     '#00cc66',  # Sea green (Lead 12)
-# ]
-# ICU_SWEEP_LINE_COLOR = '#ffff00'  # Yellow sweep line
 
 # Default values
 DEFAULT_LEAD_X = 0

@@ -1,6 +1,4 @@
-"""
-Main graph update callback - SIMPLIFIED & FIXED
-"""
+
 import dash
 import numpy as np
 import plotly.graph_objs as go
@@ -159,7 +157,7 @@ def register_graph_callbacks(app, data_loader, predictor):
         if triggered_id == "ecg-diagnose-btn" and diagnose_clicks > 0:
             result = predictor.predict(metadata, signal_scaled)
             if result['success']:
-                current_diagnosis = f"Diagnosis: {result['label']} (Confidence: {result['confidence']:.2f})"
+                current_diagnosis = f"Diagnosis: {result['label']}"
             else:
                 current_diagnosis = f"Diagnosis Error: {result['error']}"
 
@@ -197,21 +195,7 @@ def register_graph_callbacks(app, data_loader, predictor):
                                             xor_threshold, record_index)
                 return fig, current_diagnosis or "", bpm_text, polar_cumulative
 
-            # elif mode == 'polar_new':
-            #     if polar_playing:
-            #         window_size = int(polar_window * fs)
-            #         start_idx = (n_intervals * 10) % max(1, len(signal) - window_size)
-            #         end_idx = start_idx + window_size
-            #     else:
-            #         window_size = int(polar_window * fs)
-            #         start_idx, end_idx = 0, min(window_size, len(signal))
-            #
-            #     t = np.arange(start_idx, end_idx) / fs
-            #     signal_window = signal[start_idx:end_idx, :]
-            #     is_cumulative = (polar_mode == 'cumulative')
-            #     fig, new_cumulative = create_polar_new_plot(signal_window, t, polar_channel, record_index,
-            #                                                start_idx, end_idx, fs, is_cumulative, polar_cumulative)
-            #     return fig, current_diagnosis or "", bpm_text, new_cumulative
+
             elif mode == 'polar_new':
                 window_size = int(polar_window * fs)
 
@@ -248,17 +232,6 @@ def register_graph_callbacks(app, data_loader, predictor):
                                                             start_idx, end_idx, fs, phase_resolution, colormap)
                 return fig, current_diagnosis or "", bpm_text, polar_cumulative
 
-            # elif mode == 'icu_monitor':
-            #     window_size = int(ICU_WINDOW_DURATION * fs)
-            #     current_position = (n_intervals * ICU_SCROLL_STEP) % len(signal)
-            #     start_idx, end_idx = current_position, min(current_position + window_size, len(signal))
-            #     if end_idx >= len(signal):
-            #         start_idx, end_idx = 0, window_size
-            #     t = np.arange(start_idx, end_idx) / fs
-            #     signal_window = signal[start_idx:end_idx, :]
-            #     fig = create_icu_monitor_plot(signal_window, t, selected_channels, record_index,
-            #                                  start_idx, end_idx, fs, True)
-            #     return fig, current_diagnosis or "", bpm_text, polar_cumulative
 
             else:
                 return go.Figure(), current_diagnosis or "", bpm_text, polar_cumulative

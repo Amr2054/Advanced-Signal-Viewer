@@ -1,6 +1,4 @@
-"""
-Data loading utilities for ECG Viewer
-"""
+
 from io import BytesIO
 
 import numpy as np

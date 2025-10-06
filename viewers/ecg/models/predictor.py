@@ -1,6 +1,4 @@
-"""
-Model loading and prediction utilities for ECG Viewer
-"""
+
 import numpy as np
 from tensorflow.keras.models import load_model
 from viewers.ecg.config import MODEL_PATH, MODEL_INPUT_SIZE, DIAGNOSIS_LABELS

@@ -1,6 +1,4 @@
-"""
-Interval control callbacks for ECG Viewer - COMPLETE VERSION
-"""
+
 from dash import Input, Output, State
 from viewers.ecg.config import ICU_UPDATE_INTERVAL, CONTINUOUS_UPDATE_INTERVAL, POLAR_UPDATE_INTERVAL
 

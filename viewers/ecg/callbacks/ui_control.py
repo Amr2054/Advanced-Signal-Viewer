@@ -1,6 +1,3 @@
-"""
-UI control callbacks for ECG Viewer - COMPLETE VERSION
-"""
 from dash import Input, Output, State
 import dash
 
@@ -25,17 +22,6 @@ def register_ui_callbacks(app):
 
         return continuous_style, xor_style, polar_style, phase_style
 
-    # # Old modes button (ICU/Polar old)
-    # @app.callback(
-    #     [Output("ecg-play-pause", "style"), Output("ecg-play-pause", "children")],
-    #     [Input("ecg-mode-select", "value"), Input("ecg-interval", "disabled")]
-    # )
-    # def update_old_play_pause_button(mode, interval_disabled):
-    #     """Show/hide old play/pause button"""
-    #     if mode in ['icu_monitor']:
-    #         button_text = "Play" if interval_disabled else "Pause"
-    #         return {"display": "inline-block"}, button_text
-    #     return {"display": "none"}, "Pause"
 
     # === Continuous Viewer Controls ===
     @app.callback(Output("ecg-continuous-speed-display", "children"), Input("ecg-continuous-speed", "value"))
@@ -114,15 +100,6 @@ def register_ui_callbacks(app):
     def update_polar_window_display(window):
         return f"{window:.1f}s"
 
-    # @app.callback(
-    #     [Output("ecg-polar-playing", "data"), Output("ecg-polar-play-pause", "children"), Output("ecg-polar-play-pause", "color")],
-    #     Input("ecg-polar-play-pause", "n_clicks"),
-    #     State("ecg-polar-playing", "data"),
-    #     prevent_initial_call=True
-    # )
-    # def toggle_polar_playback(n_clicks, is_playing):
-    #     new_state = not is_playing
-    #     return (True, "⏸ Pause", "warning") if new_state else (False, "▶ Play", "success")
 
     @app.callback(
         [Output("ecg-polar-playing", "data"),
@@ -136,9 +113,6 @@ def register_ui_callbacks(app):
         new_state = not is_playing
         return (True, "⏸ Pause", "warning") if new_state else (False, "▶ Play", "success")
 
-    # @app.callback(Output("ecg-polar-cumulative-data", "data"), Input("ecg-polar-reset", "n_clicks"), prevent_initial_call=True)
-    # def reset_polar_cumulative(n_clicks):
-    #     return []
 
     @app.callback(
         [Output("ecg-polar-cumulative-data", "data", allow_duplicate=True),

@@ -1,6 +1,4 @@
-"""
-Signal processing utilities for ECG analysis
-"""
+
 import numpy as np
 from scipy.signal import find_peaks
 from viewers.ecg.config import SAMPLING_FREQUENCY
@@ -51,31 +49,6 @@ def get_heartbeat_info(signal, fs=SAMPLING_FREQUENCY, lead=1, start_idx=0, end_i
     return  window_size,num_heartbeats,bpm
 
 
-# def compute_recurrence_matrix(sig_x, sig_y, epsilon):
-#     """
-#     Compute recurrence matrix based on Euclidean distance in 2D phase space
-#
-#     Args:
-#         sig_x (np.ndarray): Signal from lead X
-#         sig_y (np.ndarray): Signal from lead Y
-#         epsilon (float): Recurrence threshold
-#
-#     Returns:
-#         tuple: (recurrent_points_i, recurrent_points_j) - indices where recurrence occurs
-#     """
-#     # Compute Euclidean distance matrix
-#     dx = sig_x[:, np.newaxis] - sig_x[np.newaxis, :]
-#     dy = sig_y[:, np.newaxis] - sig_y[np.newaxis, :]
-#     dist_matrix = np.sqrt(dx**2 + dy**2)
-#
-#     # Create recurrence matrix
-#     recurrence_matrix = dist_matrix <= epsilon
-#
-#     # Get recurrent points
-#     recurrent_points = np.where(recurrence_matrix)
-#
-#     return recurrent_points[0], recurrent_points[1]
-#
 
 def compute_phase_space_occurrences(sig_x, sig_y, grid_resolution=0.1):
     """
@@ -107,34 +80,3 @@ def compute_phase_space_occurrences(sig_x, sig_y, grid_resolution=0.1):
 
     return x_coords, y_coords, counts
 
-
-# def downsample_signal(signal, factor):
-#     """
-#     Downsample signal by given factor
-#
-#     Args:
-#         signal (np.ndarray): Input signal
-#         factor (int): Downsampling factor
-#
-#     Returns:
-#         np.ndarray: Downsampled signal
-#     """
-#     if factor <= 1:
-#         return signal
-#     return signal[::factor]
-#
-#
-# def standardize_signal(signal):
-#     """
-#     Standardize signal (zero mean, unit variance)
-#
-#     Args:
-#         signal (np.ndarray): Input signal
-#
-#     Returns:
-#         np.ndarray: Standardized signal
-#     """
-#     mean = np.mean(signal)
-#     std = np.std(signal)
-#     standardized = (signal - mean) / (std + 1e-6)
-#     return np.clip(standardized, -10, 10)
