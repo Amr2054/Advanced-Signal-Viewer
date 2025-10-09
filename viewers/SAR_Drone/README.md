@@ -78,7 +78,7 @@ It then processes the data to provide two main outputs:
 
 <p align="center">
   <video width="70%" controls>
-    <source src="viewers/SAR_Drone/visuals/SAR_analysis.mp4" type="video/mp4">
+    <source src="https://github.com/Amr2054/Advanced-Signal-Viewer/blob/ea18dc0c3d123c706f9c945c652d6849de0441dc/viewers/SAR_Drone/visuals/SAR_analysis.mp4" type="video/mp4">
     Your browser does not support the video tag.
   </video>
 </p>
@@ -111,7 +111,7 @@ It then processes the data to provide two main outputs:
 
 <p align="center">
   <video width="70%" controls>
-    <source src="viewers/SAR_Drone/visuals/EarthQuake_detected.mp4" type="video/mp4">
+    <source src="https://github.com/Amr2054/Advanced-Signal-Viewer/blob/ea18dc0c3d123c706f9c945c652d6849de0441dc/viewers/SAR_Drone/visuals/EarthQuake_detected.mp4" type="video/mp4">
     Your browser does not support the video tag.
   </video>
 </p>
