@@ -10,6 +10,13 @@ This part focuses on detecting and visualizing signal-based phenomena using real
 
 3. Visualize VV/VH radar channels (intensity maps and comparative visualizations).
 
+
+
+<p align="center">
+  <img src="visuals/SAR-Drone.png" alt="SAR-Drone" width="70%">
+</p>
+   
+
 ## 1. Acoustic Signals Viewer: Drone/Bird Detection
 ### Functionality
 - Upload an audio file (.wav or .mp3).
@@ -32,6 +39,14 @@ The system first checks if the sound is likely a bird using YAMNet.
 If not, it applies the drone model; if neither threshold is met, the sound is labeled “Other.”
 
 The result is displayed with a short waveform plot and an audio player for playback.
+
+
+<p align="center">
+  <img src="visuals/Drone_detection.png" alt="Drone detection" width="30%">
+  <img src="visuals/Bird_detction.png" alt="Bird detction" width="30%">
+  <img src="visuals/Other_class_detection.png" alt="Other class detection" width="30%">
+</p>
+
 
 ## 2. Radiofrequency Signals Viewer: General SAR Signal Analysis
 ### Functionality
@@ -59,6 +74,16 @@ It then processes the data to provide two main outputs:
 
 - Converts raw DN values to dB backscatter (10 * log10(DN²)) and handles no-data pixels automatically.
 
+
+
+<p align="center">
+  <video width="70%" controls>
+    <source src="visuals/SAR_analysis.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</p>
+
+
 ## 3. Radiofrequency Signals Viewer: SAR Earthquake Damage Detection
 ### Functionality
 
@@ -84,4 +109,10 @@ It then processes the data to provide two main outputs:
 
 - Displays clear classification results and visual indicators for interpretation.
 
+<p align="center">
+  <video width="70%" controls>
+    <source src="visuals/EarthQuake_detected.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</p>
 
