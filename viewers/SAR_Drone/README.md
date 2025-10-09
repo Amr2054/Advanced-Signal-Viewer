@@ -74,15 +74,16 @@ It then processes the data to provide two main outputs:
 
 - Converts raw DN values to dB backscatter (10 * log10(DN²)) and handles no-data pixels automatically.
 
-
-
 <p align="center">
-  <video width="70%" controls>
-    <source src="https://github.com/Amr2054/Advanced-Signal-Viewer/blob/ea18dc0c3d123c706f9c945c652d6849de0441dc/viewers/SAR_Drone/visuals/SAR_analysis.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
+  <img src="visuals/SAR-analyzer1.png" alt="SAR analysis results" width="50%">
 </p>
-
+<p align="center">
+  <img src="visuals/SAR-analyzer2.png" alt="SAR analysis results" width="70%">
+</p>
+<p align="center">
+  <img src="visuals/SAR-analyzer3.png" alt="SAR analysis results" width="70%">
+</p>
+   
 
 ## 3. Radiofrequency Signals Viewer: SAR Earthquake Damage Detection
 ### Functionality
@@ -110,9 +111,6 @@ It then processes the data to provide two main outputs:
 - Displays clear classification results and visual indicators for interpretation.
 
 <p align="center">
-  <video width="70%" controls>
-    <source src="https://github.com/Amr2054/Advanced-Signal-Viewer/blob/ea18dc0c3d123c706f9c945c652d6849de0441dc/viewers/SAR_Drone/visuals/EarthQuake_detected.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
+  <img src="visuals/Damage-detcted.png" alt="Damage detcted" width="50%">
 </p>
-
+   
