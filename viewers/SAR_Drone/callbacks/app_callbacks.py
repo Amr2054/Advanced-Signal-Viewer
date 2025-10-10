@@ -6,7 +6,7 @@ import librosa
 import librosa.display
 import plotly.graph_objs as go
 from dash import Input, Output, State,html
-
+import dash_bootstrap_components as dbc
 from viewers.SAR_Drone.models.earthquake_predictor import predict_damage
 from viewers.SAR_Drone.models.audio_classifier import classify_audio
 from viewers.SAR_Drone.models.sar_analyzer import analyze_sar_file
