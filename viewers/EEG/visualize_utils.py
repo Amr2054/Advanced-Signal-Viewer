@@ -37,7 +37,7 @@ class PlotGenerator:
     def __init__(self, data_manager):
         self.dm = data_manager
 
-    def create_continuous_viewer(self, channel_idx, window_start, window_length, show_predictions=True):
+    def create_continuous_viewer(self, channel_idx, window_start, window_length):
         """Create continuous-time signal viewer with viewport control."""
 
         # Calculate sample indices
@@ -54,41 +54,51 @@ class PlotGenerator:
         # Get signal for selected channel
         signal = self.dm.temp_signals[channel_idx, start_sample:end_sample]
         time_axis = self.dm.time_axis[start_sample:end_sample]
-
-        fig = go.Figure()
-
-        # Add main signal trace
+        theta = np.linspace(0, 360, len(signal))
+        
+        fig = make_subplots(
+            rows=1, cols=2,
+            subplot_titles=(
+                f"Amplitude-Time Plot",
+                f"Polar Plot"
+            ),
+            specs=[[{"type": "scatter"}, {"type": "polar"}]]
+        )
+        
+        # Amplitude-Time
         fig.add_trace(go.Scatter(
             x=time_axis,
             y=signal,
             mode='lines',
             name=f'{CH_LABELS[channel_idx]}',
             line=dict(color='blue', width=1)
-        ))
-
-        # Add seizure annotations if enabled
-        if show_predictions:
-            for pred in self.dm.segment_predictions:
-                if pred['is_seizure']:
-                    seg = self.dm.segments[pred['segment']]
-                    # Check if this segment is visible in current window
-                    if seg['end_time'] >= window_start and seg['start_time'] <= (window_start + window_length):
-                        fig.add_vrect(
-                            x0=seg['start_time'], x1=seg['end_time'],
-                            fillcolor="red", opacity=0.2,
-                            layer="below", line_width=0
-                        )
-
+        ),
+            row=1, col=1
+        )
+        
+        # Polar plot
+        fig.add_trace(
+            go.Scatterpolar(
+                r=signal,
+                theta=theta,
+                mode="lines",
+                name=f"Polar {CH_LABELS[channel_idx]}",
+                line=dict(width=1, color='green')
+            ),
+            row=1, col=2
+        )
+        
         fig.update_layout(
             title=f"Continuous Signal Viewer - Channel: {CH_LABELS[channel_idx]}",
-            xaxis_title="Time (s)",
-            yaxis_title="Amplitude (μV)",
             height=400,
             template="plotly_white",
-            xaxis=dict(range=[time_axis[0], time_axis[-1]]),
             showlegend=True
         )
-
+        
+        # Update x-axis label for amplitude plot
+        fig.update_xaxes(title_text="Time (s)", row=1, col=1)
+        fig.update_yaxes(title_text="Amplitude (μV)", row=1, col=1)
+        fig.update_xaxes(dict(range=[time_axis[0], time_axis[-1]]))
         return fig
 
     def create_segment_plots(self, segment_idx, channel_idx):
@@ -159,7 +169,7 @@ class PlotGenerator:
 
         return fig
 
-    def create_crp_plot(self, ch1_idx, ch2_idx):
+    def create_crp_plot(self, ch1_idx, ch2_idx,color):
         """Cross recurrence matrix for the entire signal."""
 
         signals = self.dm.temp_signals
@@ -177,7 +187,7 @@ class PlotGenerator:
             marker=dict(
                 size=5,
                 color=counts,
-                colorscale='Viridis',
+                colorscale=color,
                 showscale=True,
                 colorbar=dict(title="Count")
             ),
@@ -225,4 +235,55 @@ class PlotGenerator:
             yaxis=dict(range=[0, 1])
         )
 
+        return fig
+    
+    def create_xor_graph(self, channel_idx, chunk_width,Time,threshold):
+        """Create XOR graph with overlapping chunks."""
+        
+        chunk_samples = int(chunk_width * self.dm.original_sfreq)
+        Window_size = int(Time * self.dm.original_sfreq)
+        n_sample = self.dm.temp_signals[channel_idx,:Window_size]
+        n_chunks = n_sample.shape[0] // chunk_samples
+        
+        fig = go.Figure()
+        
+        # Initialize with first chunk
+        accumulated = n_sample[:chunk_samples]
+        time_axis = np.linspace(0, Time)
+        
+        # XOR with subsequent chunks
+        for i in range(0, min(n_chunks, 5)):  # Limit to 5 chunks for visibility
+            start_idx = i * chunk_samples
+            end_idx = start_idx + chunk_samples
+            
+            if end_idx > n_sample.shape[0]:
+                break
+            
+            chunk = n_sample[start_idx:end_idx]
+            
+            # Simple XOR-like operation: difference between chunks
+            xor_result = np.abs(chunk - accumulated)
+            accumulated = chunk.copy()
+            
+            threshold = threshold
+            xor_result = xor_result[xor_result >= threshold]
+            
+            fig.add_trace(go.Scatter(
+                x=time_axis,
+                y=xor_result,
+                mode='markers',
+                name=f'XOR Chunk {i}',
+                marker=dict(size=4, opacity=0.7),
+                showlegend=True
+            ))
+        
+        fig.update_layout(
+            title=f"XOR Graph - Channel: {CH_LABELS[channel_idx]} (Chunk width: {chunk_width}s)",
+            xaxis_title="Time within chunk (s)",
+            yaxis_title="XOR Amplitude (μV)",
+            height=500,
+            template="plotly_white",
+            showlegend=True
+        )
+        
         return fig

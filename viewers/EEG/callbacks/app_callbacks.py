@@ -144,15 +144,13 @@ def app_callbacks(app):
         [Input("continuous-channel", "value"),
          Input("window-start", "value"),
          Input("window-length", "value"),
-         Input("show-predictions", "value"),
          Input("data-loaded", "data")]
     )
-    def update_continuous_viewer(channel_idx, window_start, window_length, show_pred, data_loaded):
+    def update_continuous_viewer(channel_idx, window_start, window_length, data_loaded):
         global plot_generator
 
         if data_loaded and plot_generator:
-            show_predictions = "show" in show_pred if show_pred else False
-            return plot_generator.create_continuous_viewer(channel_idx, window_start, window_length, show_predictions)
+            return plot_generator.create_continuous_viewer(channel_idx, window_start, window_length)
         return {}
 
     @app.callback(
@@ -172,11 +170,27 @@ def app_callbacks(app):
         Output("crp-plot", "figure"),
         [Input("channel-1-dropdown", "value"),
          Input("channel-2-dropdown", "value"),
-         Input("data-loaded", "data")]
+         Input("data-loaded", "data"),
+         Input("ecg-colormap-select", "value")]
     )
-    def update_crp(ch1_idx, ch2_idx, data_loaded):
+    def update_crp(ch1_idx, ch2_idx, data_loaded,color):
         global plot_generator
 
         if data_loaded and plot_generator:
-            return plot_generator.create_crp_plot(ch1_idx, ch2_idx)
+            return plot_generator.create_crp_plot(ch1_idx, ch2_idx,color)
+        return {}
+    
+    @app.callback(
+    Output("xor-graph", "figure"),
+    [Input("xor-channel", "value"),
+    Input("chunk-width", "value"),
+    Input("Time","value"),
+    Input("threshold","value"),
+    Input("data-loaded", "data")]
+    )
+    def update_xor_graph(channel_idx, chunk_width, Time, threshold, data_loaded):
+        global plot_generator
+        
+        if data_loaded and plot_generator and chunk_width:
+            return plot_generator.create_xor_graph(channel_idx, chunk_width,Time,threshold)
         return {}

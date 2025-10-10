@@ -5,6 +5,18 @@ from dash import dcc, html
 from viewers.EEG.Data_helper import *
 from viewers.EEG.visualize_utils import *
 
+# Path (change on your device)
+Path = 'viewers/EEG/'
+
+# -------- Load Configs --------
+with open(f"{Path}config/config.yaml", "r") as f:
+    config = yaml.safe_load(f)
+
+#Constants-------------------
+AVAILABLE_COLORMAPS = config['AVAILABLE_COLORMAPS']
+DEFAULT_COLORMAP = config['DEFAULT_COLORMAP']
+#-----------------------------
+
 # Custom CSS styles
 custom_styles = {
     'container': {
@@ -68,7 +80,7 @@ custom_styles = {
 # layout
 def app_layout():
     return html.Div([
-        html.H1("EEG Signal Viewer", style=custom_styles['header']),
+        html.H1("EEG Signal Viewer - Dynamic Analysis", style=custom_styles['header']),
 
         dcc.Upload(
             id='upload-data',
@@ -106,26 +118,25 @@ def app_layout():
 
                 html.Div([
                     html.Label("Window Start (s)", style={'fontWeight': 'bold'}),
-                    dcc.Input(
+                    dcc.Slider(
                         id="window-start",
-                        type="number",
                         value=0,
                         min=0,
+                        max = 1000,
                         step=1,
-                        style={'width': '100%'}
+                        marks={0: '0x', 15: '15x', 50: '50x', 300: '300x', 500: '500x'}
                     ),
                 ], style={'width': '15%', 'display': 'inline-block', 'marginRight': '2%'}),
 
                 html.Div([
                     html.Label("Window Length (s)", style={'fontWeight': 'bold'}),
-                    dcc.Input(
+                    dcc.Slider(
                         id="window-length",
-                        type="number",
                         value=10,
                         min=1,
                         max=60,
                         step=1,
-                        style={'width': '100%'}
+                        marks={1: '1x', 10: '10x', 25: '25x', 40: '40x', 55: '55x'}
                     ),
                 ], style={'width': '15%', 'display': 'inline-block', 'marginRight': '2%'}),
 
@@ -144,13 +155,6 @@ def app_layout():
                 html.Div([
                     html.Button('Play', id='play-button', n_clicks=0, style={'marginRight': '10px'}),
                     html.Button('Stop', id='stop-button', n_clicks=0),
-                    dcc.Checklist(
-                        id="show-predictions",
-                        options=[{"label": "Show Seizures", "value": "show"}],
-                        value=["show"],
-                        inline=True,
-                        style={'marginTop': '10px'}
-                    ),
                 ], style={'width': '20%', 'display': 'inline-block'}),
             ], style=custom_styles['controlPanel']),
 
@@ -213,10 +217,75 @@ def app_layout():
                     clearable=False
                 ),
             ], style={'width': '48%', 'display': 'inline-block'}),
+            
+            html.Div([
+                html.Label("Colormap:", style={'fontWeight': '600'}),
+                dcc.Dropdown(
+                    id="ecg-colormap-select",
+                    options=[{"label": cm, "value": cm} for cm in AVAILABLE_COLORMAPS],
+                    value=DEFAULT_COLORMAP
+                ),
+            ], style={'width': '23%', 'display': 'inline-block'})
+            
         ], style={'marginBottom': '20px'}),
 
         dcc.Graph(id="crp-plot"),
 
+        # XOR Graph Section
+        html.Hr(style={'marginTop': '30px', 'marginBottom': '30px'}),
+        html.Div([
+            html.H3("XOR Graph Analysis", style={'textAlign': 'center'}),
+            html.Div([
+                html.Div([
+                    html.Label("Channel", style={'fontWeight': 'bold'}),
+                    dcc.Dropdown(
+                        id="xor-channel",
+                        options=[{"label": ch, "value": i} for i, ch in enumerate(CH_LABELS)],
+                        value=0,
+                        clearable=False
+                    ),
+                ], style={'width': '30%', 'display': 'inline-block', 'marginRight': '5%'}),
+                
+                html.Div([
+                    html.Label("Chunk Width (s)", style={'fontWeight': 'bold'}),
+                    dcc.Slider(
+                        id="chunk-width",
+                        min=1,
+                        max=100,
+                        value=5,
+                        marks={1: '1x', 10: '10x', 25: '25x', 40: '40x', 55: '55x'},
+                        step=1,
+                    ),
+                ], style={'width': '30%', 'display': 'inline-block'}),
+                
+                html.Div([
+                    html.Label("Signal Time (s)", style={'fontWeight': 'bold'}),
+                    dcc.Slider(
+                        id="Time",
+                        min=1,
+                        max=1000,
+                        value=10,
+                        marks={1: '1x', 10: '10x', 25: '25x', 100: '100x', 550: '550x'},
+                        step=1,
+                    ),
+                ], style={'width': '30%', 'display': 'inline-block'}),
+                html.Div([
+                    html.Label("XOR Threshold", style={'fontWeight': 'bold'}),
+                    dcc.Slider(
+                        id="threshold",
+                        value=20,
+                        min=1,
+                        max=200,
+                        step=1,
+                        marks={1: '1x', 10: '10x', 25: '25x', 40: '40x', 55: '55x'}
+                    ),
+                ], style={'width': '30%', 'display': 'inline-block'}),
+            ], style={'marginBottom': '20px'}),
+            
+            dcc.Graph(id="xor-graph"),
+        ]),
+        
+        
         # Store components
         dcc.Store(id="data-loaded", data=False),
         dcc.Store(id="playback-state", data={'playing': False, 'current_time': 0}),

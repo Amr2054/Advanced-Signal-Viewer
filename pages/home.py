@@ -23,10 +23,12 @@ viewer_cards = [
         "description": "Comprehensive brain wave monitoring and analysis with AI-powered diagnosis.",
         "icon": "🧠",
         "features": [
-            "Multi-channel EEG display",
+            "Multi-channel EEG continous display",
             "AI-powered diagnosis",
             "Polar Coordinates analysis",
-            "Event detection",
+            "Segment viewers",
+            "XOR Plot",
+            "Recurrence plot"
         ],
         "href": "/EEG-viewer",
         "color": "primary",
@@ -39,7 +41,7 @@ viewer_cards = [
         "icon": "🌊",
         "features": [
             "Doppler waveform analysis",
-            "Velocity measurements",
+            "Velocity Predection",
             "Sound Generation",
             "Doppler signal detection"
         ],
