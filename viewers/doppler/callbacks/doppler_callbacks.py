@@ -478,6 +478,107 @@ def handle_animation_step(start_ts, n_intervals, speed_ms, source_f, lateral):
 # CALLBACKS
 # =============================================================================
 def doppler_callbacks(app):
+    # Client-side callback for Play button
+    app.clientside_callback(
+        """
+        function(n_clicks) {
+            if (n_clicks) {
+                var audio = document.getElementById('html5-audio-player');
+                if (audio) {
+                    audio.play();
+                    return false;  // Enable interval
+                }
+            }
+            return true;  // Keep interval disabled
+        }
+        """,
+        Output('audio-update-interval', 'disabled'),
+        Input('audio-play-btn', 'n_clicks'),
+        prevent_initial_call=True
+    )
+    
+    # Client-side callback for Stop button
+    app.clientside_callback(
+        """
+        function(n_clicks) {
+            if (n_clicks) {
+                var audio = document.getElementById('html5-audio-player');
+                if (audio) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }
+            }
+            return true;  // Disable interval
+        }
+        """,
+        Output('audio-update-interval', 'disabled', allow_duplicate=True),
+        Input('audio-stop-btn', 'n_clicks'),
+        prevent_initial_call=True
+    )
+    
+    # Client-side callback for Volume control
+    app.clientside_callback(
+        """
+        function(volume) {
+            var audio = document.getElementById('html5-audio-player');
+            if (audio) {
+                audio.volume = volume / 100.0;
+            }
+            return window.dash_clientside.no_update;
+        }
+        """,
+        Output('audio-volume-slider', 'id'),
+        Input('audio-volume-slider', 'value')
+    )
+    
+    # Client-side callback for updating progress bar
+    app.clientside_callback(
+        """
+        function(n_intervals) {
+            var audio = document.getElementById('html5-audio-player');
+            if (!audio) {
+                return [{'width': '0%', 'height': '100%', 'background': 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)', 'borderRadius': '4px', 'transition': 'width 0.1s linear'}, '0:00', '0:00'];
+            }
+            
+            var currentTime = audio.currentTime;
+            var duration = audio.duration;
+            
+            if (isNaN(duration) || duration === 0) {
+                return [{'width': '0%', 'height': '100%', 'background': 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)', 'borderRadius': '4px', 'transition': 'width 0.1s linear'}, '0:00', '0:00'];
+            }
+            
+            // Calculate progress percentage
+            var progress = (currentTime / duration) * 100;
+            
+            // Format time as M:SS
+            function formatTime(seconds) {
+                var mins = Math.floor(seconds / 60);
+                var secs = Math.floor(seconds % 60);
+                return mins + ':' + (secs < 10 ? '0' : '') + secs;
+            }
+            
+            var currentTimeStr = formatTime(currentTime);
+            var durationStr = formatTime(duration);
+            var progressStyle = {
+                'width': progress.toFixed(2) + '%',
+                'height': '100%',
+                'background': 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+                'borderRadius': '4px',
+                'transition': 'width 0.1s linear'
+            };
+            
+            return [progressStyle, currentTimeStr, durationStr];
+        }
+        """,
+        [
+            Output('audio-progress-bar', 'style'),
+            Output('audio-current-time', 'children'),
+            Output('audio-total-time', 'children')
+        ],
+        Input('audio-update-interval', 'n_intervals'),
+        prevent_initial_call=False
+    )
+    
     @app.callback(
         Output('doppler-content', 'children'),
         Input('url', 'pathname'),
@@ -490,6 +591,156 @@ def doppler_callbacks(app):
             return create_generation_layout()
         else:
             return html.Div()
+
+
+    @app.callback(
+        [
+            Output('audio-player-section', 'children'),
+            Output('audio-data-store', 'children')
+        ],
+        Input('upload-wav', 'contents'),
+        State('upload-wav', 'filename')
+    )
+    def create_audio_player(contents, filename):
+        """Create custom audio player with play/stop controls when file is uploaded."""
+        if contents is None:
+            return html.Div(), ""
+        
+        try:
+            # Store the audio data
+            return (
+                dbc.Card([
+                    dbc.CardBody([
+                        html.H4("🎧 Audio Player", style={'marginBottom': '20px', 'color': '#667eea'}),
+                        
+                        # File name display
+                        html.Div([
+                            html.Span("📄 ", style={'fontSize': '20px'}),
+                            html.Span(filename, style={
+                                'fontWeight': '600',
+                                'color': '#333',
+                                'fontSize': '16px'
+                            })
+                        ], style={
+                            'marginBottom': '20px',
+                            'padding': '12px',
+                            'background': '#f8f9fa',
+                            'borderRadius': '8px',
+                            'border': '2px solid #e9ecef'
+                        }),
+                        
+                        # Custom Audio Player
+                        html.Div([
+                            # Progress bar container
+                            html.Div([
+                                html.Div(id='audio-progress-bar', style={
+                                    'width': '0%',
+                                    'height': '100%',
+                                    'background': 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+                                    'borderRadius': '4px',
+                                    'transition': 'width 0.1s linear'
+                                })
+                            ], style={
+                                'width': '100%',
+                                'height': '8px',
+                                'background': '#e9ecef',
+                                'borderRadius': '4px',
+                                'marginBottom': '20px',
+                                'overflow': 'hidden',
+                                'cursor': 'pointer'
+                            }, id='audio-progress-container'),
+                            
+                            # Time display
+                            html.Div([
+                                html.Span(id='audio-current-time', children='0:00', style={
+                                    'fontSize': '14px',
+                                    'color': '#666',
+                                    'fontWeight': '600'
+                                }),
+                                html.Span(' / ', style={'color': '#999', 'margin': '0 5px'}),
+                                html.Span(id='audio-total-time', children='0:00', style={
+                                    'fontSize': '14px',
+                                    'color': '#666',
+                                    'fontWeight': '600'
+                                })
+                            ], style={'textAlign': 'center', 'marginBottom': '20px'}),
+                            
+                            # Control buttons
+                            html.Div([
+                                dbc.ButtonGroup([
+                                    dbc.Button(
+                                        html.Span([
+                                            html.I(className="fas fa-play", style={'marginRight': '8px'}),
+                                            "▶ Play"
+                                        ]),
+                                        id='audio-play-btn',
+                                        color="success",
+                                        size="lg",
+                                        style={
+                                            'width': '150px',
+                                            'fontWeight': '600',
+                                            'borderRadius': '8px 0 0 8px'
+                                        }
+                                    ),
+                                    dbc.Button(
+                                        html.Span([
+                                            html.I(className="fas fa-stop", style={'marginRight': '8px'}),
+                                            "■ Stop"
+                                        ]),
+                                        id='audio-stop-btn',
+                                        color="danger",
+                                        size="lg",
+                                        style={
+                                            'width': '150px',
+                                            'fontWeight': '600',
+                                            'borderRadius': '0 8px 8px 0'
+                                        }
+                                    )
+                                ])
+                            ], style={'textAlign': 'center', 'marginBottom': '15px'}),
+                            
+                            # Volume control
+                            html.Div([
+                                html.Label("🔊 Volume", style={
+                                    'fontWeight': '600',
+                                    'marginBottom': '10px',
+                                    'display': 'block',
+                                    'color': '#333',
+                                    'fontSize': '14px'
+                                }),
+                                dcc.Slider(
+                                    id='audio-volume-slider',
+                                    min=0,
+                                    max=100,
+                                    value=80,
+                                    marks={0: '0%', 50: '50%', 100: '100%'},
+                                    tooltip={"placement": "bottom", "always_visible": False}
+                                )
+                            ], style={'marginTop': '20px'}),
+                            
+                            # Hidden HTML5 audio element
+                            html.Audio(
+                                id='html5-audio-player',
+                                src=contents,
+                                style={'display': 'none'}
+                            ),
+                            
+                            # Interval for updating progress
+                            dcc.Interval(
+                                id='audio-update-interval',
+                                interval=100,  # Update every 100ms
+                                disabled=True
+                            )
+                        ])
+                    ])
+                ], style={**CARD_STYLE, 'background': 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)'}),
+                contents
+            )
+            
+        except Exception as e:
+            return html.Div([
+                html.P(f"Error loading audio: {str(e)}", style={'color': 'red'})
+            ]), ""
 
 
     @app.callback(
@@ -523,7 +774,7 @@ def doppler_callbacks(app):
             # Convert to base64 for audio player
             audio_base64 = audio_array_to_base64(audio_data)
             
-            # Create audio player without trip info
+            # Create audio player
             audio_player = html.Div([
                 html.H4("Generated Doppler Audio (Stereo)", style={'color': 'green'}),
                 html.P("🎧 Use headphones for best spatial effect!", style={'fontStyle': 'italic', 'color': '#666'}),
