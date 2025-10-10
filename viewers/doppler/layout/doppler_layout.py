@@ -170,7 +170,7 @@ def create_main_layout():
 
 
 def create_detection_layout():
-    """Create the enhanced detection page layout."""
+    """Create the enhanced detection page layout with audio player controls."""
     return dbc.Container([
         # Page Header
         html.Div([
@@ -202,6 +202,9 @@ def create_detection_layout():
                 ),
             ])
         ], style=CARD_STYLE),
+        
+        # Audio Player Section
+        html.Div(id='audio-player-section', children=[], style={'marginBottom': '20px'}),
         
         # Results Section
         dbc.Card([
@@ -274,6 +277,9 @@ def create_detection_layout():
                 )
             ])
         ], style=CARD_STYLE),
+        
+        # Hidden storage for audio data
+        html.Div(id='audio-data-store', style={'display': 'none'}),
         
         # Back Button
         dbc.Button(
