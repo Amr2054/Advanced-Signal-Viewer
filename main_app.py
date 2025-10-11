@@ -1,3 +1,5 @@
+import os
+
 import dash
 from dash import dcc, html, Input, Output
 import dash_bootstrap_components as dbc
@@ -199,4 +201,5 @@ doppler_callbacks(app)
 register_SAR_drone_callback(app)
 
 if __name__ == '__main__':
-    app.run(debug=False, port=8050)
+    port = int(os.environ.get("PORT", 8080))  # Render provides PORT env var
+    app.run_server(host="0.0.0.0", port=port, debug=False)
