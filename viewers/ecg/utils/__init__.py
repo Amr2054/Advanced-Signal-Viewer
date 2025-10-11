@@ -14,7 +14,8 @@ from .visualization import (
     create_continuous_plot,
     create_xor_chunks_plot,
     create_polar_new_plot,
-    create_phase_space_plot_with_colormap
+    create_phase_space_plot_with_colormap,
+    create_polar_time_domain_plot
 )
 
 __all__ = [
@@ -28,5 +29,6 @@ __all__ = [
     'create_continuous_plot',
     'create_xor_chunks_plot',
     'create_polar_new_plot',
-    'create_phase_space_plot_with_colormap'
+    'create_phase_space_plot_with_colormap',
+    'create_polar_time_domain_plot'
 ]

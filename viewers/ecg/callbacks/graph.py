@@ -1,4 +1,4 @@
-
+import os
 import dash
 import numpy as np
 import plotly.graph_objs as go
@@ -21,16 +21,90 @@ from viewers.ecg.config import (
 from viewers.ecg.utils.signal_processing import get_heartbeat_info
 from viewers.ecg.utils.visualization import (
     create_static_dynamic_plot,
-   # create_icu_monitor_plot,
     create_continuous_plot,
     create_xor_chunks_plot,
     create_polar_new_plot,
-    create_phase_space_plot_with_colormap
+    create_phase_space_plot_with_colormap, create_polar_time_domain_plot
 )
 
 
 def register_graph_callbacks(app, data_loader, predictor):
     """Register all graph callbacks"""
+
+    # File upload handler
+    @app.callback(
+        [Output('ecg-upload-status', 'children'),
+         Output('ecg-upload-status', 'style'),
+         Output('ecg-record-select', 'options'),
+         Output('ecg-record-select', 'value')],
+        Input('ecg-upload-data', 'contents'),
+        State('ecg-upload-data', 'filename')
+    )
+    def handle_file_upload(contents, filename):
+        if contents is None:
+            return "", {'display': 'none'}, dash.no_update, dash.no_update
+
+        import base64
+        import io
+
+        try:
+            # Decode the file
+            content_type, content_string = contents.split(',')
+            decoded = base64.b64decode(content_string)
+
+            # Check file type
+            if filename.endswith('.zip'):
+                # Save temporarily and load
+                temp_path = f'temp_{filename}'
+                with open(temp_path, 'wb') as f:
+                    f.write(decoded)
+                success, message = data_loader.load_from_zip(temp_path)
+                os.remove(temp_path)
+            elif filename.endswith('.npz'):
+                # Load from bytes
+                success, message = data_loader.load_from_npz(io.BytesIO(decoded))
+            else:
+                return "❌ Please upload a .zip or .npz file", {'color': 'red',
+                                                               'display': 'block'}, dash.no_update, dash.no_update
+
+            if success:
+                # Update record options
+                num_records = data_loader.get_num_records()
+                options = [{"label": f"Record {i}", "value": i} for i in range(num_records)]
+                return f"✅ {message} - {num_records} records loaded", {'color': 'green',
+                                                                           'display': 'block'}, options, 0
+            else:
+                return f"❌ {message}", {'color': 'red', 'display': 'block'}, dash.no_update, dash.no_update
+
+        except Exception as e:
+            return f"❌ Error: {str(e)}", {'color': 'red', 'display': 'block'}, dash.no_update, dash.no_update
+
+
+    @app.callback(
+        [Output('ecg-record-select', 'options', allow_duplicate=True),
+         Output('ecg-record-select', 'value', allow_duplicate=True),
+         Output('ecg-upload-status', 'children', allow_duplicate=True),
+         Output('ecg-upload-status', 'style', allow_duplicate=True)],
+        Input('ecg-data-source-select', 'value'),
+        prevent_initial_call=True
+    )
+    def switch_data_source(source):
+        if source == 'preloaded':
+            # Reload original preloaded data
+            success = data_loader.reload_original()
+
+            if success:
+                num_records = data_loader.get_num_records()
+                options = [{"label": f"Record {i}", "value": i} for i in range(num_records)]
+                return options, 0, f"✅ Preloaded data restored - {num_records} records", {'color': 'green',
+                                                                                          'display': 'block'}
+            else:
+                return dash.no_update, dash.no_update, "❌ Error loading preloaded data", {'color': 'red',
+                                                                                          'display': 'block'}
+        else:
+            # Switching to upload mode - clear status
+            return dash.no_update, dash.no_update, "", {'display': 'none'}
+
 
     # Signal length store
     @app.callback(
@@ -79,14 +153,14 @@ def register_graph_callbacks(app, data_loader, predictor):
             return new_position
         return dash.no_update
 
-
-
     # Main graph callback
     @app.callback(
         [Output("ecg-graph", "figure"),
          Output("ecg-diagnosis-output", "children"),
          Output("ecg-bpm-output", "children"),
-         Output("ecg-polar-cumulative-data", "data", allow_duplicate=True)],
+         Output("ecg-polar-cumulative-data", "data", allow_duplicate=True),
+         Output("ecg-polar-time-graph", "figure"),
+         Output("ecg-graph", "style")],
         [Input("ecg-interval", "n_intervals"),
          Input("ecg-channel-select", "value"),
          Input("ecg-mode-select", "value"),
@@ -119,7 +193,22 @@ def register_graph_callbacks(app, data_loader, predictor):
                      polar_channel, polar_window, polar_mode, polar_playing,
                      polar_position,phase_ch1, phase_ch2, phase_resolution, colormap,
                      current_diagnosis, current_bpm, polar_cumulative):
+
         """Main graph update"""
+        if mode == 'polar_new':
+            graph_style = {
+                'height': '70vh',
+                'border': '2px solid #dee2e6',
+                'borderRadius': '8px',
+                'backgroundColor': 'white'
+            }
+        else:
+            graph_style = {
+                'height': '70vh',
+                'border': '2px solid #dee2e6',
+                'borderRadius': '8px',
+                'backgroundColor': 'white'
+            }
 
         ctx = dash.callback_context
         triggered_id = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else None
@@ -163,7 +252,7 @@ def register_graph_callbacks(app, data_loader, predictor):
 
         # Channel check
         if not selected_channels and mode not in ['xor_chunks', 'polar_new', 'phase_space']:
-            return go.Figure(), current_diagnosis or "", bpm_text, polar_cumulative
+            return go.Figure(), current_diagnosis or "", bpm_text, polar_cumulative, dash.no_update,graph_style
 
         fs = SAMPLING_FREQUENCY
 
@@ -176,7 +265,7 @@ def register_graph_callbacks(app, data_loader, predictor):
                 signal_window = signal[start_idx:end_idx, :]
                 fig = create_static_dynamic_plot(signal_window, t, selected_channels, record_index,
                                                 start_idx, end_idx, fs, 'static')
-                return fig, current_diagnosis or "", bpm_text, polar_cumulative
+                return fig, current_diagnosis or "", bpm_text, polar_cumulative, dash.no_update, graph_style
 
             elif mode == 'continuous':
                 window_size = int(continuous_zoom * fs)
@@ -188,13 +277,12 @@ def register_graph_callbacks(app, data_loader, predictor):
                 signal_window = signal[start_idx:end_idx, :]
                 fig = create_continuous_plot(signal_window, t, selected_channels, record_index,
                                             start_idx, end_idx, fs, continuous_zoom, continuous_speed)
-                return fig, current_diagnosis or "", bpm_text, polar_cumulative
+                return fig, current_diagnosis or "", bpm_text, polar_cumulative, dash.no_update, graph_style
 
             elif mode == 'xor_chunks':
                 fig = create_xor_chunks_plot(signal, fs, xor_channel, xor_period, xor_duration,
                                             xor_threshold, record_index)
-                return fig, current_diagnosis or "", bpm_text, polar_cumulative
-
+                return fig, current_diagnosis or "", bpm_text, polar_cumulative, dash.no_update, graph_style
 
             elif mode == 'polar_new':
                 window_size = int(polar_window * fs)
@@ -220,9 +308,18 @@ def register_graph_callbacks(app, data_loader, predictor):
                 t = np.arange(start_idx, end_idx) / fs
                 signal_window = signal[start_idx:end_idx, :]
                 is_cumulative = (polar_mode == 'cumulative')
-                fig, new_cumulative = create_polar_new_plot(signal_window, t, polar_channel, record_index,
-                                                            start_idx, end_idx, fs, is_cumulative, polar_cumulative)
-                return fig, current_diagnosis or "", bpm_text, new_cumulative
+
+                # Create polar plot
+                fig_polar, new_cumulative = create_polar_new_plot(signal_window, t, polar_channel, record_index,
+                                                                  start_idx, end_idx, fs, is_cumulative,
+                                                                  polar_cumulative)
+
+                # Create time domain plot
+                fig_time = create_polar_time_domain_plot(signal_window, t, polar_channel, record_index,
+                                                         start_idx, end_idx, fs)
+
+                return fig_polar, current_diagnosis or "", bpm_text, new_cumulative, fig_time, graph_style
+
 
             elif mode == 'phase_space':
                 window_size = int(PHASE_SPACE_WINDOW_DURATION * fs)
@@ -230,13 +327,12 @@ def register_graph_callbacks(app, data_loader, predictor):
                 signal_window = signal[start_idx:end_idx, :]
                 fig = create_phase_space_plot_with_colormap(signal_window, phase_ch1, phase_ch2, record_index,
                                                             start_idx, end_idx, fs, phase_resolution, colormap)
-                return fig, current_diagnosis or "", bpm_text, polar_cumulative
-
+                return fig, current_diagnosis or "", bpm_text, polar_cumulative, dash.no_update, graph_style
 
             else:
-                return go.Figure(), current_diagnosis or "", bpm_text, polar_cumulative
+                return go.Figure(), current_diagnosis or "", bpm_text, polar_cumulative, dash.no_update, graph_style
 
         except Exception as e:
             import traceback
             traceback.print_exc()
-            return go.Figure(), f"Error: {str(e)}", bpm_text, polar_cumulative
+            return go.Figure(), f"Error: {str(e)}", bpm_text, polar_cumulative,dash.no_update,graph_style

@@ -330,8 +330,9 @@ def create_polar_new_plot(signal_window, t, channel, record_index, start_idx, en
                 direction="counterclockwise"
             )
         ),
-        height=700,
-        showlegend=False
+        height=550,
+        showlegend=False,
+        # margin=dict(l=50, r=50, t=100, b=50)
     )
 
     return fig, cumulative_data
@@ -426,5 +427,51 @@ def create_phase_space_plot_with_colormap(signal_window, channel_1, channel_2, r
         showlegend=False,
         hovermode='closest'
     )
+
+    return fig
+
+
+def create_polar_time_domain_plot(signal_window, t, channel, record_index,
+                                  start_idx, end_idx, fs):
+    """
+    Create a simple time domain plot for comparison with polar view
+
+    Args:
+        signal_window (np.ndarray): ECG signal window
+        t (np.ndarray): Time array
+        channel (int): Channel index
+        record_index (int): Record index
+        start_idx (int): Start sample index
+        end_idx (int): End sample index
+        fs (int): Sampling frequency
+
+    Returns:
+        go.Figure: Plotly figure with time domain view
+    """
+    sig = signal_window[:, channel]
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=t,
+        y=sig,
+        mode='lines',
+        line=dict(width=1.5, color='#3498db'),
+        name=get_lead_name(channel)
+    ))
+
+    fig.update_layout(
+        title=f"Time Domain - Lead {get_lead_name(channel)} | {start_idx / fs:.1f}s - {end_idx / fs:.1f}s",
+        xaxis_title="Time [s]",
+        yaxis_title="Amplitude [mV]",
+        height=250,
+        margin=dict(l=50, r=30, t=50, b=40),
+        plot_bgcolor='#f8f9fa',
+        showlegend=False,
+        hovermode='x'
+    )
+
+    fig.update_xaxes(showgrid=True, gridcolor='lightgray', range=[t[0], t[-1]])
+    fig.update_yaxes(showgrid=True, gridcolor='lightgray', zeroline=True, zerolinecolor='gray')
 
     return fig

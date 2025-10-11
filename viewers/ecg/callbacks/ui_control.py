@@ -127,3 +127,24 @@ def register_ui_callbacks(app):
     @app.callback(Output("ecg-phase-resolution-display", "children"), Input("ecg-phase-space-resolution", "value"))
     def update_phase_resolution_display(resolution):
         return f"{resolution:.2f}mV"
+
+
+    # === Data Source Toggle ===
+    @app.callback(
+        Output('ecg-upload-container', 'style'),
+        Input('ecg-data-source-select', 'value')
+    )
+    def toggle_upload_visibility(source):
+        if source == 'upload':
+            return {'display': 'block'}
+        return {'display': 'none'}
+
+        # Show/hide polar time domain view
+    @app.callback(
+        Output('ecg-polar-time-view', 'style'),
+        Input('ecg-mode-select', 'value')
+    )
+    def toggle_polar_time_view(mode):
+        if mode == 'polar_new':
+            return {'display': 'block'}
+        return {'display': 'none'}

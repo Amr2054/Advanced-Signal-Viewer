@@ -7,7 +7,8 @@ def register_interval_callbacks(app):
     """Register callbacks for controlling the interval component"""
 
     @app.callback(
-        [Output("ecg-interval", "disabled"), Output("ecg-interval", "interval")],
+        [Output("ecg-interval", "disabled"), Output("ecg-interval", "interval"),
+              ],
         [Input("ecg-mode-select", "value"),
          Input("ecg-play-pause", "n_clicks"),
          Input("ecg-continuous-playing", "data"),
@@ -34,11 +35,5 @@ def register_interval_callbacks(app):
             if is_polar_playing:
                 return False, POLAR_UPDATE_INTERVAL
             return True, POLAR_UPDATE_INTERVAL
-
-        # ICU Monitor
-        if mode == 'icu_monitor':
-            if n_clicks_old == 0:
-                return False, ICU_UPDATE_INTERVAL
-            return not is_disabled, ICU_UPDATE_INTERVAL
 
         return True, 1000
